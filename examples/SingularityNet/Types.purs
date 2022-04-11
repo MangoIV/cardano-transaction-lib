@@ -1,4 +1,6 @@
-module SingularityNet.Types where
+module SingularityNet.Types
+  ( BondedStakingState(BondedStakingState)
+  ) where
 
 import Contract.Prelude
 import Contract.Address (PaymentPubKeyHash)
