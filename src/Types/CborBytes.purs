@@ -1,9 +1,11 @@
--- | CborBytes. A wrapper over `ByteArray` to indicate that the bytes are cbor.
+-- | CborBytes. A wrapper over `ByteArray` to indicate that the bytes are
+-- | in CBOR representation (concise binary object representation).
 
 module Types.CborBytes
   ( CborBytes(..)
-  , cborBytesToByteArray
+  , cborBytesToByteArray   
   , cborBytesFromByteArray
+  , cborBytesToRawBytes
   , cborBytesToIntArray
   , cborBytesFromIntArray
   , cborBytesFromIntArrayUnsafe
@@ -17,13 +19,15 @@ import Data.Newtype (class Newtype, wrap, unwrap)
 
 import Types.ByteArray (ByteArray)
 import Types.ByteArray as BA
+import Types.RawBytes (RawBytes)
 import Data.Maybe (Maybe)
 import Prelude
 import Aeson (class DecodeAeson, decodeAesonViaJson)
 import Data.Argonaut (class DecodeJson, decodeJson)
 import Test.QuickCheck.Arbitrary (class Arbitrary, arbitrary)
 
--- | An array of Bytes containing CBOR data
+-- | An array of Bytes containing CBOR data (concise binary object representation).
+-- | Bytes are 8-bit unsigned. All valus are in network byte order (big-endian).
 newtype CborBytes = CborBytes ByteArray
 
 instance Show CborBytes where
@@ -76,3 +80,6 @@ cborBytesToByteArray = unwrap
 
 cborBytesFromByteArray :: ByteArray -> CborBytes
 cborBytesFromByteArray = wrap
+
+cborBytesToRawBytes :: CborBytes -> RawBytes
+cborBytesToRawBytes = wrap <<< unwrap

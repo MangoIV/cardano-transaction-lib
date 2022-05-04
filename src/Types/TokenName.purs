@@ -20,9 +20,10 @@ import Data.Tuple.Nested (type (/\))
 import FromData (class FromData)
 import Serialization.Types (AssetName) as CSL
 import ToData (class ToData)
-import Types.ByteArray (ByteArray, byteLength)
+import Types.RawBytes (RawBytes, byteLength)
+import Data.Newtype (wrap, unwrap)
 
-newtype TokenName = TokenName ByteArray
+newtype TokenName = TokenName RawBytes
 
 derive newtype instance Eq TokenName
 derive newtype instance FromData TokenName
@@ -32,29 +33,29 @@ derive newtype instance ToData TokenName
 instance Show TokenName where
   show (TokenName tn) = "(TokenName" <> show tn <> ")"
 
-getTokenName :: TokenName -> ByteArray
+getTokenName :: TokenName -> RawBytes
 getTokenName (TokenName tokenName) = tokenName
 
 -- | The empty token name.
 adaToken :: TokenName
 adaToken = TokenName mempty
 
--- | Create a `TokenName` from a `ByteArray` since TokenName data constructor is
+-- | Create a `TokenName` from a `RawBytes` since TokenName data constructor is
 -- | not exported
-mkTokenName :: ByteArray -> Maybe TokenName
+mkTokenName :: RawBytes -> Maybe TokenName
 mkTokenName byteArr =
-  if byteLength byteArr <= 32 then pure $ TokenName byteArr else Nothing
+  if byteLength byteArr <= 32 then pure  <<< TokenName $ byteArr else Nothing
 
-foreign import assetNameName :: CSL.AssetName -> ByteArray
+foreign import assetNameName :: CSL.AssetName -> RawBytes
 
 tokenNameFromAssetName :: CSL.AssetName -> TokenName
 tokenNameFromAssetName = TokenName <<< assetNameName
 
 -- | Creates a Map of `TokenName` and Big Integers from a `Traversable` of 2-tuple
--- | `ByteArray` and Big Integers with the possibility of failure
+-- | `RawBytes` and Big Integers with the possibility of failure
 mkTokenNames
   :: forall (t :: Type -> Type)
    . Traversable t
-  => t (ByteArray /\ BigInt)
+  => t (RawBytes /\ BigInt)
   -> Maybe (Map TokenName BigInt)
 mkTokenNames = traverse (ltraverse mkTokenName) >>> map Map.fromFoldable

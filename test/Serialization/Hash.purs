@@ -4,6 +4,7 @@ import Control.Bind (discard, bind)
 import Data.Eq ((==))
 import Data.Function (($))
 import Data.Maybe (Maybe(..), isNothing)
+import Data.Newtype (wrap, unwrap)
 import Data.Unit (Unit)
 import Serialization.Hash
   ( ed25519KeyHashFromBech32
@@ -71,7 +72,7 @@ suite = do
     scrhB32 = scriptHashToBech32Unsafe "stake_vkh" scrh
     mScrhB32 = scriptHashToBech32 "stake_vkh" scrh
     scrhBts = scriptHashToBytes scrh
-    scrhFromBytes = scriptHashFromBytes scrhBts
+    scrhFromBytes = scriptHashFromBytes (unwrap scrhBts)
     scrhFromBech = scriptHashFromBech32 scrhB32
 
   assertTrue "Safe scriptHashToBech32 should produce Just when unsafe works"

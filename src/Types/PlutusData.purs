@@ -16,7 +16,7 @@ import Data.Show.Generic (genericShow)
 import Data.Traversable (for)
 import Data.Tuple (Tuple)
 import Data.Tuple.Nested ((/\))
-import Types.ByteArray (ByteArray, hexToByteArray)
+import Types.RawBytes (RawBytes, hexToRawBytes)
 
 -- Doesn't distinguish "BuiltinData" and "Data" like Plutus:
 data PlutusData
@@ -24,7 +24,7 @@ data PlutusData
   | Map (Array (Tuple PlutusData PlutusData))
   | List (Array PlutusData)
   | Integer BigInt
-  | Bytes ByteArray
+  | Bytes RawBytes
 
 derive instance Eq PlutusData
 derive instance Ord PlutusData
@@ -68,6 +68,6 @@ instance DecodeAeson PlutusData where
     decodeBytes :: Either JsonDecodeError PlutusData
     decodeBytes = do
       bytesHex <- decodeAeson aeson
-      case hexToByteArray bytesHex of
+      case hexToRawBytes bytesHex of
         Nothing -> Left $ UnexpectedValue $ encodeJson bytesHex
         Just res -> pure $ Bytes res

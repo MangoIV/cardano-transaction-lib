@@ -41,6 +41,7 @@ import Prim.TypeError (class Fail, Text)
 import Record as Record
 import Type.Proxy (Proxy(Proxy))
 import Types.ByteArray (ByteArray)
+import Types.RawBytes (RawBytes)
 import Types.PlutusData (PlutusData(Bytes, Constr, List, Integer))
 
 -- | Errors
@@ -246,11 +247,15 @@ instance (FromData a, FromData b) => FromData (Tuple a b) where
   fromData _ = Nothing
 
 instance FromData ByteArray where
+  fromData (Bytes res) = Just <<< unwrap $ res
+  fromData _ = Nothing
+
+instance FromData RawBytes where
   fromData (Bytes res) = Just res
   fromData _ = Nothing
 
 instance FromData String where
-  fromData (Bytes bytes) = hush $ decodeUtf8 $ unwrap bytes
+  fromData (Bytes bytes) = hush $ decodeUtf8 $ unwrap $ unwrap bytes
   fromData _ = Nothing
 
 -- Nothing prevents fromData b ~ Maybe BigInt from being zero here, perhaps

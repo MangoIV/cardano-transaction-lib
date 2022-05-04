@@ -26,6 +26,7 @@ import Serialization.Types
   , PlutusMap
   )
 import Types.ByteArray (ByteArray)
+import Types.RawBytes (RawBytes)
 import Types.PlutusData (PlutusData(Constr, Map, List, Integer, Bytes)) as T
 
 convertPlutusData :: PlutusData -> Maybe T.PlutusData
@@ -81,7 +82,7 @@ foreign import _PlutusData_integer
   :: MaybeFfiHelper -> PlutusData -> Maybe BigInt
 
 foreign import _PlutusData_bytes
-  :: MaybeFfiHelper -> PlutusData -> Maybe ByteArray
+  :: MaybeFfiHelper -> PlutusData -> Maybe RawBytes
 
 foreign import _unpackPlutusList
   :: ContainerHelper -> PlutusList -> Array PlutusData

@@ -109,7 +109,12 @@ exports.newEd25519Signature = bech32 => () =>
 
 exports.transactionWitnessSetSetVkeys = setter('vkeys');
 
-exports.toBytes = sth => sth.to_bytes();
+/* FIXME: return false for hash types /*
+exports.toBytes_ = eitherFfiHelper => sth => {
+    return eitherFfiHelper.from(x => x.to_bytes(),
+				x => x.to_bytes(),
+				x => true)
+}
 
 exports.newCostmdls = () =>
     lib.Costmdls.new();

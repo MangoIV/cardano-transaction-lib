@@ -27,12 +27,14 @@ import Data.BigInt (BigInt)
 import Data.Foldable (all)
 import Data.Lattice (class JoinSemilattice, class MeetSemilattice)
 import Data.Maybe (Maybe(Nothing), fromMaybe)
+import Data.Newtype (wrap)
 import Data.These (These(Both, That, This), these)
 import Data.Tuple (fst)
 import Data.Tuple.Nested (type (/\), (/\))
 import FromData (class FromData, fromData)
 import ToData (class ToData, toData)
 import Types.ByteArray (ByteArray)
+import Types.RawBytes (RawBytes)
 import Types.TokenName (TokenName, adaToken, mkTokenName)
 import Plutus.Types.AssocMap (Map(Map)) as Plutus
 import Plutus.Types.AssocMap (singleton, lookup, keys, union, mapThese) as Plutus.Map
@@ -86,7 +88,7 @@ singleton cs tn = Value <<< Plutus.Map.singleton cs <<< Plutus.Map.singleton tn
 -- | Creates a singleton value given two byte arrays for currency symbol and
 -- | token name respectively. Returns `Nothing` when trying to create a `Value`
 -- | with the Ada currency symbol and a non-empty token name.
-singleton' :: ByteArray -> ByteArray -> BigInt -> Maybe Value
+singleton' :: RawBytes -> RawBytes -> BigInt -> Maybe Value
 singleton' cs tn amount
   | cs == mempty && tn /= mempty = Nothing
   | otherwise =

@@ -41,7 +41,7 @@ import Data.Generic.Rep (class Generic)
 import Data.Map (Map)
 import Data.Map as Map
 import Data.Maybe (Maybe(Just, Nothing), fromMaybe, maybe)
-import Data.Newtype (class Newtype, wrap)
+import Data.Newtype (class Newtype, wrap, unwrap)
 import Data.Show.Generic (genericShow)
 import Data.String (Pattern(Pattern), indexOf, splitAt, uncons)
 import Data.Traversable (sequence)
@@ -317,9 +317,9 @@ instance DecodeAeson Assets where
               before /\ tn
 
       currSymb <- note (assetStrError assetStr "CurrencySymbol" currSymStr)
-        $ mkCurrencySymbol =<< hexToByteArray currSymStr
+        $ mkCurrencySymbol <<< wrap =<< hexToByteArray currSymStr
       tokenName <- note (assetStrError assetStr "TokenName" tnStr)
-        $ mkTokenName =<< hexToByteArray tnStr
+        $ mkTokenName <<< wrap =<< hexToByteArray tnStr
       pure $ currSymb /\ Map.singleton tokenName quantity
 
     assetStrError str t v = TypeMismatch $

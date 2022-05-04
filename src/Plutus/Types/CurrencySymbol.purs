@@ -11,8 +11,9 @@ module Plutus.Types.CurrencySymbol
 import Prelude
 
 import Data.Maybe (Maybe)
-import FromData (class FromData)
-import ToData (class ToData)
+import Data.Newtype (wrap, unwrap)
+import FromData (class FromData, fromData)
+import ToData (class ToData, toData)
 import Serialization.Hash
   ( ScriptHash
   , scriptHashAsBytes
@@ -20,9 +21,11 @@ import Serialization.Hash
   , scriptHashToBytes
   )
 import Types.ByteArray (ByteArray)
+import Types.CborBytes (CborBytes, cborBytesToRawBytes)
+import Types.RawBytes (RawBytes)
 import Types.Scripts (MintingPolicyHash(MintingPolicyHash))
 
-newtype CurrencySymbol = CurrencySymbol ByteArray
+newtype CurrencySymbol = CurrencySymbol RawBytes
 
 derive newtype instance Eq CurrencySymbol
 derive newtype instance Ord CurrencySymbol
@@ -35,8 +38,9 @@ instance Show CurrencySymbol where
 adaSymbol :: CurrencySymbol
 adaSymbol = CurrencySymbol mempty
 
+-- FIXME: now what is it exactly?
 scriptHashAsCurrencySymbol :: ScriptHash -> CurrencySymbol
-scriptHashAsCurrencySymbol = CurrencySymbol <<< scriptHashAsBytes
+scriptHashAsCurrencySymbol = CurrencySymbol <<< wrap <<< unwrap <<< scriptHashAsBytes
 
 -- | The minting policy hash of a currency symbol.
 currencyMPSHash :: CurrencySymbol -> Maybe MintingPolicyHash
@@ -44,12 +48,12 @@ currencyMPSHash = map MintingPolicyHash <<< currencyScriptHash
 
 -- | The currency symbol of a monetary policy hash.
 mpsSymbol :: MintingPolicyHash -> Maybe CurrencySymbol
-mpsSymbol (MintingPolicyHash h) = mkCurrencySymbol $ scriptHashToBytes h
+mpsSymbol (MintingPolicyHash h) = mkCurrencySymbol <<< cborBytesToRawBytes $ scriptHashToBytes h
 
-getCurrencySymbol :: CurrencySymbol -> ByteArray
+getCurrencySymbol :: CurrencySymbol -> RawBytes
 getCurrencySymbol (CurrencySymbol curSymbol) = curSymbol
 
-mkCurrencySymbol :: ByteArray -> Maybe CurrencySymbol
+mkCurrencySymbol :: RawBytes -> Maybe CurrencySymbol
 mkCurrencySymbol byteArr
   | byteArr == mempty =
       pure adaSymbol

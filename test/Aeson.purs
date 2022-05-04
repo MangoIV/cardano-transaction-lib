@@ -44,7 +44,7 @@ import Test.Spec.Assertions (shouldEqual)
 import Test.QuickCheck (quickCheck', (<?>))
 import Test.Utils (assertTrue)
 import TestM (TestPlanM)
-import Types.ByteArray (hexToByteArrayUnsafe)
+import Types.RawBytes (hexToRawBytesUnsafe)
 import Types.PlutusData
   ( PlutusData
       ( Integer
@@ -67,13 +67,13 @@ suite = do
     test "Bytes" $ liftEffect do
       let
         expected =
-          Bytes $ hexToByteArrayUnsafe "00FFAA"
+          Bytes $ hexToRawBytesUnsafe "00FFAA"
       decodeJsonString "\"00FFAA\"" `shouldEqual` Right expected
     test "List" $ liftEffect do
       let
         expected =
           List
-            [ Bytes $ hexToByteArrayUnsafe "00FFAA"
+            [ Bytes $ hexToRawBytesUnsafe "00FFAA"
             , Integer $ BigInt.fromInt 1
             ]
       decodeJsonString "[\"00FFAA\", 1]" `shouldEqual` Right expected
@@ -81,7 +81,7 @@ suite = do
       let
         expected =
           Map
-            [ Bytes (hexToByteArrayUnsafe "00FFAA") /\ Integer
+            [ Bytes (hexToRawBytesUnsafe "00FFAA") /\ Integer
                 (BigInt.fromInt 1)
             ]
       decodeJsonString "{\"map\": [ { \"key\": \"00FFAA\", \"value\": 1 } ] }"
@@ -94,8 +94,8 @@ suite = do
           \ [ { \"key\": \"00FFAA\", \"value\": 1 },\
           \   { \"key\": \"AAAA\", \"value\": 200 } ] }"
         expected = Map
-          [ Bytes (hexToByteArrayUnsafe "00FFAA") /\ Integer (BigInt.fromInt 1)
-          , Bytes (hexToByteArrayUnsafe "AAAA") /\ Integer (BigInt.fromInt 200)
+          [ Bytes (hexToRawBytesUnsafe "00FFAA") /\ Integer (BigInt.fromInt 1)
+          , Bytes (hexToRawBytesUnsafe "AAAA") /\ Integer (BigInt.fromInt 200)
           ]
       decodeJsonString input `shouldEqual` Right expected
     test "Constr" $ liftEffect do

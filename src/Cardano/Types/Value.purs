@@ -83,7 +83,8 @@ import Serialization.Hash
   , scriptHashToBytes
   )
 import ToData (class ToData)
-import Types.ByteArray (ByteArray, byteLength, hexToByteArray)
+import Types.CborBytes (cborBytesToRawBytes)
+import Types.RawBytes (RawBytes, byteLength, hexToRawBytes)
 import Types.Scripts (MintingPolicyHash(MintingPolicyHash))
 import Types.TokenName
   ( TokenName
@@ -177,7 +178,7 @@ valueToCoin' v = valueOf v unsafeAdaSymbol adaToken
 --------------------------------------------------------------------------------
 -- CurrencySymbol
 --------------------------------------------------------------------------------
-newtype CurrencySymbol = CurrencySymbol ByteArray
+newtype CurrencySymbol = CurrencySymbol RawBytes
 
 derive newtype instance Eq CurrencySymbol
 derive newtype instance FromData CurrencySymbol
@@ -192,11 +193,11 @@ instance DecodeJson CurrencySymbol where
   decodeJson = caseJsonObject
     (Left $ TypeMismatch "Expected object")
     ( note (TypeMismatch "Invalid CurrencySymbol") <<< mkCurrencySymbol
-        <=< note (TypeMismatch "Invalid ByteArray") <<< hexToByteArray
+        <=< note (TypeMismatch "Invalid RawBytes") <<< hexToRawBytes
         <=< flip getField "unCurrencySymbol"
     )
 
-getCurrencySymbol :: CurrencySymbol -> ByteArray
+getCurrencySymbol :: CurrencySymbol -> RawBytes
 getCurrencySymbol (CurrencySymbol curSymbol) = curSymbol
 
 -- Currency symbol for Ada, do not use inside NonAdaAsset map - do not export.
@@ -204,14 +205,14 @@ getCurrencySymbol (CurrencySymbol curSymbol) = curSymbol
 unsafeAdaSymbol :: CurrencySymbol
 unsafeAdaSymbol = CurrencySymbol mempty
 
--- | Create a `CurrencySymbol` from a `ByteArray` since `CurrencySymbol` data
+-- | Create a `CurrencySymbol` from a `RawBytes` since `CurrencySymbol` data
 -- | constructor is not exported
-mkCurrencySymbol :: ByteArray -> Maybe CurrencySymbol
+mkCurrencySymbol :: RawBytes -> Maybe CurrencySymbol
 mkCurrencySymbol byteArr =
   scriptHashFromBytes byteArr *> pure (CurrencySymbol byteArr)
 
--- Do not export. Create an Ada `CurrencySymbol` from a `ByteArray`
-mkUnsafeAdaSymbol :: ByteArray -> Maybe CurrencySymbol
+-- Do not export. Create an Ada `CurrencySymbol` from a `RawBytes`
+mkUnsafeAdaSymbol :: RawBytes -> Maybe CurrencySymbol
 mkUnsafeAdaSymbol byteArr =
   if byteArr == mempty then pure unsafeAdaSymbol else Nothing
 
@@ -275,7 +276,7 @@ mkNonAdaAsset = NonAdaAsset
 mkNonAdaAssetsFromTokenMap'
   :: forall (t :: Type -> Type)
    . Traversable t
-  => t (ByteArray /\ Map TokenName BigInt)
+  => t (RawBytes /\ Map TokenName BigInt)
   -> Maybe (Map CurrencySymbol (Map TokenName BigInt))
 mkNonAdaAssetsFromTokenMap' =
   traverse (ltraverse mkCurrencySymbol) >>> map Map.fromFoldable
@@ -285,7 +286,7 @@ mkNonAdaAssetsFromTokenMap' =
 mkNonAdaAssetsFromTokenMap
   :: forall (t :: Type -> Type)
    . Traversable t
-  => t (ByteArray /\ Map TokenName BigInt)
+  => t (RawBytes /\ Map TokenName BigInt)
   -> Maybe NonAdaAsset
 mkNonAdaAssetsFromTokenMap xs = mkNonAdaAssetsFromTokenMap' xs <#> mkNonAdaAsset
 
@@ -293,18 +294,18 @@ mkNonAdaAssets'
   :: forall (s :: Type -> Type) (t :: Type -> Type)
    . Traversable s
   => Traversable t
-  => s (ByteArray /\ t (ByteArray /\ BigInt))
+  => s (RawBytes /\ t (RawBytes /\ BigInt))
   -> Maybe (Map CurrencySymbol (Map TokenName BigInt))
 mkNonAdaAssets' =
   traverse (bitraverse mkCurrencySymbol mkTokenNames) >>> map Map.fromFoldable
 
--- | Given a `Traversable` of `ByteArray`s and amounts to safely convert into a
+-- | Given a `Traversable` of `RawBytes`s and amounts to safely convert into a
 -- | `NonAdaAsset`
 mkNonAdaAssets
   :: forall (s :: Type -> Type) (t :: Type -> Type)
    . Traversable s
   => Traversable t
-  => s (ByteArray /\ t (ByteArray /\ BigInt))
+  => s (RawBytes /\ t (RawBytes /\ BigInt))
   -> Maybe NonAdaAsset
 mkNonAdaAssets xs = mkNonAdaAssets' xs <#> mkNonAdaAsset
 
@@ -358,7 +359,7 @@ mkValue = Value
 
 -- | Creates a singleton value given two byte arrays for currency symbol and
 -- | token name respectively
-mkSingletonValue :: ByteArray -> ByteArray -> BigInt -> Maybe Value
+mkSingletonValue :: RawBytes -> RawBytes -> BigInt -> Maybe Value
 mkSingletonValue curSymbol' tokenName' amount = do
   curSymbol <- mkCurrencySymbol curSymbol' <|> mkUnsafeAdaSymbol curSymbol'
   tokenName <- mkTokenName tokenName'
@@ -653,7 +654,7 @@ currencyMPSHash = MintingPolicyHash <<< currencyScriptHash
 -- Plutus doesn't use Maybe here.
 -- | The currency symbol of a monetary policy hash
 mpsSymbol :: MintingPolicyHash -> Maybe CurrencySymbol
-mpsSymbol (MintingPolicyHash h) = mkCurrencySymbol $ scriptHashToBytes h
+mpsSymbol (MintingPolicyHash h) = mkCurrencySymbol <<< cborBytesToRawBytes $ scriptHashToBytes h
 
 -- Like `mapEither` that works with 'These'.
 mapThese

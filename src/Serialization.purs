@@ -3,6 +3,7 @@ module Serialization
   , convertTxInput
   , convertTxOutput
   , toBytes
+  , toBytes'
   , newTransactionUnspentOutputFromBytes
   , newTransactionWitnessSetFromBytes
   , hashScriptData
@@ -26,6 +27,8 @@ import Effect (Effect)
 import FfiHelpers
   ( MaybeFfiHelper
   , maybeFfiHelper
+  , EitherFfiHelper
+  , eitherFfiHelper
   , ContainerHelper
   , containerHelper
   )
@@ -413,20 +416,26 @@ foreign import newProposedProtocolParameterUpdates
 
 foreign import setTxIsValid :: Transaction -> Boolean -> Effect Unit
 
+-- Add more as needed.
+type ToBytes = Transaction
+               |+| TransactionOutput
+               |+| TransactionHash
+               |+| DataHash
+               |+| PlutusData
+               |+| TransactionWitnessSet
+               |+| NativeScript
+               |+| ScriptDataHash
+               |+| Redeemers
+
 -- NOTE returns cbor encoding for all but hash types, for which it returns raw bytes
-foreign import toBytes
-  :: ( Transaction
-         |+| TransactionOutput
-         |+| TransactionHash
-         |+| DataHash
-         |+| PlutusData
-         |+| TransactionWitnessSet
-         |+| NativeScript
-         |+| ScriptDataHash
-         |+| Redeemers
-     -- Add more as needed.
-     )
-  -> ByteArray
+foreign import toBytes_ :: EitherFfiHelper -> Tobytes -> Either RawBytes CborBytes
+
+toBytes :: ToBytes -> Either RawBytes CborBytes
+
+toBytes = toBytes_ eitherFfiHelper
+
+toBytes' :: ToBytes -> ByteArray
+toBytes' = either unwrap unwrap <<< toBytes
 
 convertTransaction :: T.Transaction -> Effect Transaction
 convertTransaction

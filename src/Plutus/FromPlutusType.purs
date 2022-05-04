@@ -33,6 +33,7 @@ import Plutus.Types.CurrencySymbol (adaSymbol, getCurrencySymbol) as Plutus
 import Plutus.Types.Value (Value) as Plutus
 import Plutus.Types.Value (getValue) as Plutus.Value
 
+import Types.RawBytes (RawBytes, rawBytesFromIntArrayUnsafe)
 import Types.ByteArray (ByteArray, byteArrayFromIntArrayUnsafe)
 import Types.TokenName (adaToken)
 import Cardano.Types.Value (Value) as Types
@@ -141,9 +142,9 @@ instance FromPlutusType Maybe Plutus.Address Serialization.Address where
 
     -- | Encodes the address type along with the network tag (%b0001 - Mainnet)
     -- | as a one-element byte array.
-    addrHeader :: AddressHeaderType -> ByteArray
+    addrHeader :: AddressHeaderType -> RawBytes
     addrHeader headerType =
-      byteArrayFromIntArrayUnsafe <<< singleton <<< toInt $
+      rawBytesFromIntArrayUnsafe <<< singleton <<< toInt $
         (addrHeaderTypeUInt headerType `shl` fromInt 4) + fromInt 1
 
     pointerToBytes :: Serialization.Address.Pointer -> ByteArray
